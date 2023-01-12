@@ -23,6 +23,27 @@ Typical usage is:
 docker run --rm -d -p 6080:80 -v $PWD:/workspace:rw -e USERNAME=username -e USERID=userid -e RESOLUTION=1680x1050 --name ubuntu-novnc pietersynthesis/ubuntu-novnc:22.04
 ```
 
+
+Docker-compose example:
+
+```yaml
+services:
+  ubuntu-novnc:
+    image: pietersynthesis/ubuntu-novnc:22.04
+    environment:
+      - HTTP_USERNAME=username
+      - HTTP_PASSWORD=aGoodPassword
+      - RESOLUTION=1920x1080
+    volumes:
+      - /path/on/host:/root/solstice:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/volumes:/var/lib/docker/volumes:ro
+    ports:
+      - 6080:80
+```
+
+
+
 Very Quick Start
 ----------------
 Run ```./startUbuntu.sh```, you will have Ubuntu 22.04 in your browser, with the current working directory mounted on /workspace. The container will be removed when it stops, so save your work in /workspace if you want to keep it.

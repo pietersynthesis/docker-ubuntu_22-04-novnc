@@ -5,10 +5,12 @@ REPO  ?= pietersynthesis/
 NAME  ?= ubuntu-novnc
 TAG   ?= 22.04
 ARCH  := $$(arch=$$(uname -m); if [[ $$arch == "x86_64" ]]; then echo amd64; else echo $$arch; fi)
-RESOL   = 1920x1080
+RESOL   = 1600x900
 ARCHS = amd64
 IMAGES := $(ARCHS:%=$(REPO)$(NAME):$(TAG)-%)
 PLATFORMS := $$(first="True"; for a in $(ARCHS); do if [[ $$first == "True" ]]; then printf "linux/%s" $$a; first="False"; else printf ",linux/%s" $$a; fi; done)
+SHELL := /bin/bash
+
 
 # These files will be generated from teh Jinja templates (.j2 sources)
 templates = Dockerfile rootfs/etc/supervisor/conf.d/supervisord.conf
@@ -17,17 +19,9 @@ templates = Dockerfile rootfs/etc/supervisor/conf.d/supervisord.conf
 build: $(templates)
 	docker build --tag $(REPO)$(NAME):$(TAG)-$(ARCH) .
 	docker build --tag $(REPO)$(NAME):$(TAG) .
-	@danglingimages=$$(docker images --filter "dangling=true" -q); \
-	if [[ $$danglingimages != "" ]]; then \
-	  docker rmi $$(docker images --filter "dangling=true" -q); \
-	fi
 
 from-scratch: $(templates)
 	docker build --no-cache --pull --tag $(REPO)$(NAME):$(TAG)-$(ARCH) .
-	@danglingimages=$$(docker images --filter "dangling=true" -q); \
-	if [[ $$danglingimages != "" ]]; then \
-	  docker rmi $$(docker images --filter "dangling=true" -q); \
-	fi
 
 # yarnpkg_pubkey.gpg :
 # 	wget --output-document=yarnpkg_pubkey.gpg https://dl.yarnpkg.com/debian/pubkey.gpg
