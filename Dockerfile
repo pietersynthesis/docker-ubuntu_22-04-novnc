@@ -6,7 +6,7 @@ FROM ubuntu:22.04 as system
 
 # Avoid prompts for time zone
 ENV DEBIAN_FRONTEND noninteractive
-ENV TZ=Europe/Paris
+ENV TZ=Africa/Johannesburg
 # Fix issue with libGL on Windows
 ENV LIBGL_ALWAYS_INDIRECT=1
 
@@ -40,10 +40,6 @@ RUN wget https://github.com/krallin/tini/archive/v0.19.0.tar.gz \
     cd tini-0.19.0; cmake . && make && make install \
  && cd ..; rm -r tini-0.19.0 v0.19.0.tar.gz
 
-
-# NextCloud
-RUN apt-get update && apt-get install -y nextcloud-desktop
-
 # Firefox with apt, not snap (which does not run in the container)
 COPY mozilla-firefox_aptprefs.txt /etc/apt/preferences.d/mozilla-firefox
 RUN add-apt-repository -y ppa:mozillateam/ppa
@@ -75,6 +71,100 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/* /tmp/a.txt /tmp/b.txt
+
+# dev packages
+RUN apt-get update && \
+    apt-get install -y \
+    visualvm \
+    iputils-ping \
+    software-properties-common \
+    apt-transport-https \
+    wget \
+    python3-dev \
+    python3-pip \
+    openjdk-8-jdk-headless
+
+RUN mkdir -p /root/Desktop
+RUN mkdir -p /root/.local/share/applications
+
+RUN echo '[Desktop Entry]\n \
+          Type=Link\n \
+          Name=VisualVM\n \
+          Icon=visualvm\n \
+          URL=/usr/share/applications/visualvm.desktop' > /root/Desktop/visualvm.desktop
+
+# Install VS Code
+RUN wget -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /usr/share/keyrings/vscode.gpg && \
+    echo deb [arch=amd64 signed-by=/usr/share/keyrings/vscode.gpg] https://packages.microsoft.com/repos/vscode stable main | tee /etc/apt/sources.list.d/vscode.list && \
+    apt-get update && \
+    apt-get install -y code && \
+    apt-get clean
+RUN echo '[Desktop Entry]\n \
+          Name=Visual Studio Code\n \
+          Comment=Code Editing. Redefined.\n \
+          GenericName=Text Editor\n \
+          Exec=/usr/share/code/code --unity-launch --no-sandbox --user-dir /root %F\n \
+          Icon=com.visualstudio.code\n \
+          Type=Application\n \
+          StartupNotify=false\n \
+          StartupWMClass=Code\n \
+          Categories=TextEditor;Development;IDE;\n \
+          MimeType=text/plain;inode/directory;application/x-code-workspace;\n \
+          Actions=new-empty-window;\n \
+          Keywords=vscode;\n \
+          \n \
+          [Desktop Action new-empty-window]\n \
+          Name=New Empty Window\n \
+          Exec=/usr/share/code/code --new-window %F\n \
+          Icon=com.visualstudio.code' > /root/Desktop/code.desktop
+
+# Install Postman
+RUN add-apt-repository ppa:tiagohillebrandt/postman && \
+    apt-get update && \
+    apt-get install -y postman
+
+# Install IntelliJ IDEA Community
+RUN wget https://download.jetbrains.com/idea/ideaIC-2022.3.1.tar.gz && \
+    tar -xzf ideaIC-2022.3.1.tar.gz -C /opt && \
+    rm ideaIC-2022.3.1.tar.gz
+RUN echo '[Desktop Entry]\n \
+          Version=1.0\n \
+          Type=Application\n \
+          Name=IntelliJ IDEA Community Edition\n \
+          Icon=/opt/idea-IC-223.8214.52/bin/idea.svg\n \
+          Exec="/opt/idea-IC-223.8214.52/bin/idea.sh" %f\n \
+          Comment=Capable and Ergonomic IDE for JVM\n \
+          Categories=Development;IDE;\n \
+          Terminal=false\n \
+          StartupWMClass=jetbrains-idea-ce\n \
+          StartupNotify=true' > /root/.local/share/applications/jetbrains-idea-ce.desktop
+RUN echo '[Desktop Entry]\n \
+          Type=Link\n \
+          Name=IntelliJ IDEA Community Edition\n \
+          Icon=/opt/idea-IC-223.8214.52/bin/idea.svg\n \
+          URL=/root/.local/share/applications/jetbrains-idea-ce.desktop' > /root/Desktop/jetbrains-idea-ce.desktop
+
+# Install dbeaver:
+RUN wget https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb && \
+    dpkg -i dbeaver-ce_latest_amd64.deb && \
+    rm dbeaver-ce_latest_amd64.deb
+RUN echo '[Desktop Entry]\n \
+          Type=Link\n \
+          Name=dbeaver-ce\n \
+          Icon=/usr/share/dbeaver-ce/dbeaver.png\n \
+          URL=/usr/share/applications/dbeaver-ce.desktop' > /root/Desktop/DBeaver CE.desktop
+
+# Install docker.io
+RUN apt-get -y install docker.io
+
+# Other icons
+RUN echo '[Desktop Entry]\n \
+          Type=Link\n \
+          Name=LXTerminal\n \
+          Icon=lxterminal\n \
+          URL=/usr/share/applications/lxterminal.desktop' > /root/Desktop/lxterminal.desktop
+
+
 
 
 ################################################################################
@@ -109,7 +199,7 @@ RUN apt autoremove && apt autoclean
 # merge
 ################################################################################
 FROM system
-LABEL maintainer="frederic.boulanger@centralesupelec.fr"
+LABEL maintainer="pieter@synthesis.co.za"
 
 COPY --from=builder /src/web/dist/ /usr/local/lib/web/frontend/
 COPY rootfs /

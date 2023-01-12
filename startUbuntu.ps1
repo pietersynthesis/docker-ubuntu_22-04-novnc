@@ -1,6 +1,6 @@
 # Has to be authorized using:
 # Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
-$REPO="fredblgr/"
+$REPO="pietersynthesis/"
 $IMAGE="ubuntu-novnc"
 $TAG="22.04"
 $RESOL="1440x900"

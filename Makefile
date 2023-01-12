@@ -1,12 +1,12 @@
 .PHONY: build manifest buildfat check run debug push save clean clobber
 
 # Default values for variables
-REPO  ?= fredblgr/
+REPO  ?= pietersynthesis/
 NAME  ?= ubuntu-novnc
 TAG   ?= 22.04
 ARCH  := $$(arch=$$(uname -m); if [[ $$arch == "x86_64" ]]; then echo amd64; else echo $$arch; fi)
-RESOL   = 1440x900
-ARCHS = amd64 arm64
+RESOL   = 1920x1080
+ARCHS = amd64
 IMAGES := $(ARCHS:%=$(REPO)$(NAME):$(TAG)-%)
 PLATFORMS := $$(first="True"; for a in $(ARCHS); do if [[ $$first == "True" ]]; then printf "linux/%s" $$a; first="False"; else printf ",linux/%s" $$a; fi; done)
 
@@ -16,6 +16,7 @@ templates = Dockerfile rootfs/etc/supervisor/conf.d/supervisord.conf
 # Rebuild the container image and remove intermediary images
 build: $(templates)
 	docker build --tag $(REPO)$(NAME):$(TAG)-$(ARCH) .
+	docker build --tag $(REPO)$(NAME):$(TAG) .
 	@danglingimages=$$(docker images --filter "dangling=true" -q); \
 	if [[ $$danglingimages != "" ]]; then \
 	  docker rmi $$(docker images --filter "dangling=true" -q); \
@@ -99,6 +100,7 @@ debug:
 
 push:
 	docker push $(REPO)$(NAME):$(TAG)-$(ARCH)
+	docker push $(REPO)$(NAME):$(TAG)
 
 save:
 	docker save $(REPO)$(NAME):$(TAG)-$(ARCH) | gzip > $(NAME)-$(TAG)-$(ARCH).tar.gz
