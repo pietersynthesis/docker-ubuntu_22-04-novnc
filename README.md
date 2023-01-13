@@ -35,7 +35,7 @@ services:
       - HTTP_PASSWORD=aGoodPassword
       - RESOLUTION=1920x1080
     volumes:
-      - /path/on/host:/root/solstice:ro
+      - /path/on/host:/root/host:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/volumes:/var/lib/docker/volumes:ro
     ports:
